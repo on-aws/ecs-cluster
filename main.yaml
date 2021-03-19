@@ -18,20 +18,6 @@ Parameters:
   Owner:
     Type: String
 
-  VolumeSize:
-    Description: Persistent storage (EBS Volume) size.
-    Type: Number
-    Default: 125
-
-  VolumeType:
-    Description: Persistent storage (EBS Volume) size.
-    Type: String
-    Default: st1
-    AllowedValues:
-      - st1
-      - gp3
-      - io2
-
   AvailabilityZonesCount:
     Description: Number of availability zones to span.
     Default: 2
@@ -83,72 +69,6 @@ Resources:
           - Key: Owner
             Value: !Ref Owner
           - !Ref AWS::NoValue
-
-  ################################################################################
-  # Cluster Persistence
-  ################################################################################
-  VolumeA:
-    Type: AWS::EC2::Volume
-    Properties:
-      Size: !Ref VolumeSize
-      VolumeType: !Ref VolumeType
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      Tags:
-        - Fn::If:
-          - AssignApp
-          - Key: App
-            Value: !Ref App
-          - !Ref AWS::NoValue
-        - Fn::If:
-          - AssignOwner
-          - Key: Owner
-            Value: !Ref Owner
-          - !Ref AWS::NoValue
-        - Key: Name
-          Value: on-aws-volume-a
-    DeletionPolicy: Snapshot
-
-  VolumeB:
-    Type: AWS::EC2::Volume
-    Condition: SecondZone
-    Properties:
-      Size: !Ref VolumeSize
-      VolumeType: !Ref VolumeType
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      Tags:
-        - Fn::If:
-          - AssignApp
-          - Key: App
-            Value: !Ref App
-          - !Ref AWS::NoValue
-        - Fn::If:
-          - AssignOwner
-          - Key: Owner
-            Value: !Ref Owner
-          - !Ref AWS::NoValue
-        - Key: Name
-          Value: on-aws-volume-b
-
-  VolumeC:
-    Type: AWS::EC2::Volume
-    Condition: ThirdZone
-    Properties:
-      Size: !Ref VolumeSize
-      VolumeType: !Ref VolumeType
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      Tags:
-        - Fn::If:
-          - AssignApp
-          - Key: App
-            Value: !Ref App
-          - !Ref AWS::NoValue
-        - Fn::If:
-          - AssignOwner
-          - Key: Owner
-            Value: !Ref Owner
-          - !Ref AWS::NoValue
-        - Key: Name
-          Value: on-aws-volume-c
 
   ################################################################################
   # Cluster Security
@@ -213,7 +133,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - ec2:AttachVolume
                   - ecs:CreateCluster
                   - ecs:DeregisterContainerInstance
                   - ecs:DiscoverPollEndpoint
