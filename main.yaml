@@ -208,7 +208,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
       Policies:
-        - PolicyName: !Ref AWS::StackName
+        - PolicyName: !Sub ${AWS::StackName}-ecs-instance
           PolicyDocument:
             Statement:
               - Effect: Allow
@@ -225,6 +225,30 @@ Resources:
                   - ecr:BatchGetImage
                   - ecr:GetDownloadUrlForLayer
                   - ecr:GetAuthorizationToken
+                Resource: '*'
+        - PolicyName: !Sub ${AWS::StackName}-rexray
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:AttachVolume
+                  - ec2:CreateVolume
+                  - ec2:CreateSnapshot
+                  - ec2:CreateTags
+                  - ec2:DeleteVolume
+                  - ec2:DeleteSnapshot
+                  - ec2:DescribeAvailabilityZones
+                  - ec2:DescribeInstances
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeVolumeAttribute
+                  - ec2:DescribeVolumeStatus
+                  - ec2:DescribeSnapshots
+                  - ec2:CopySnapshot
+                  - ec2:DescribeSnapshotAttribute
+                  - ec2:DetachVolume
+                  - ec2:ModifySnapshotAttribute
+                  - ec2:ModifyVolumeAttribute
+                  - ec2:DescribeTags
                 Resource: '*'
 
   InstanceProfile:
@@ -267,74 +291,14 @@ Resources:
               #!/bin/bash
               yum update -y
               yum install -y aws-cfn-bootstrap
-              export instance=`curl http://169.254.169.254/latest/meta-data/instance-id`
-              export az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone`
+              docker plugin install rexray/ebs REXRAY_PREEMPT=true EBS_REGION=${AWS::Region} --grant-all-permissions
               /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchTemplate --region ${AWS::Region}
               /opt/aws/bin/cfn-signal '${UserDataHandle}'
     Metadata:
       AWS::CloudFormation::Init:
         config:
-          packages:
-            yum:
-              unzip: []
           commands:
-            00_install_aws_cli:
-              command: |
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                unzip awscliv2.zip
-                ./aws/install
-            01_attach_ebs_volume_a:
-              command:
-                Fn::Sub:
-                  - |
-                    if [[ $az == '${AZ}' ]]
-                    then
-                      aws ec2 attach-volume --region ${AWS::Region} \
-                        --volume-id ${VolumeA} \
-                        --instance-id $instance \
-                        --device /dev/sdf
-                    fi
-                  -
-                    AZ: !Select [ 0, !GetAZs '' ]
-            02_attach_ebs_volume_b:
-              command:
-                Fn::If:
-                  - SecondZone
-                  - Fn::Sub:
-                    - |
-                      if [[ $az == '${AZ}' ]]
-                      then
-                        aws ec2 attach-volume --region ${AWS::Region} \
-                          --volume-id ${VolumeB} \
-                          --instance-id $instance \
-                          --device /dev/sdf
-                      fi
-                    -
-                      AZ: !Select [ 1, !GetAZs '' ]
-                  - echo 'SKIP'
-            03_attach_ebs_volume_c:
-              command:
-                Fn::If:
-                  - ThirdZone
-                  - Fn::Sub:
-                    - |
-                      if [[ $az == '${AZ}' ]]
-                      then
-                        aws ec2 attach-volume --region ${AWS::Region} \
-                          --volume-id ${VolumeC} \
-                          --instance-id $instance \
-                          --device /dev/sdf
-                      fi
-                    -
-                      AZ: !Select [ 2, !GetAZs '' ]
-                  - echo 'SKIP'
-            04_wait_ebs_volume_attached:
-              command: while [ "$(file -sL /dev/sdf | grep -q 'cannot open' || echo 'yes')" != 'yes' ]; do sleep 10; done
-            05_format_volume_if_needed:
-              command: file -sL /dev/sdf | grep -q 'XFS' || mkfs -t xfs /dev/sdf
-            06_mount_volume:
-              command: mkdir /on-aws && mount /dev/sdf /on-aws
-            07_add_instance_to_cluster:
+            01_add_instance_to_cluster:
               command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
 
   SpotFleetA:
