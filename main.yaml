@@ -20,9 +20,14 @@ Parameters:
 
   AvailabilityZonesCount:
     Description: Number of availability zones to span.
-    Default: 2
+    Default: 3
     Type: Number
     AllowedValues: [ 1, 2, 3 ]
+
+  AllocationStrategy:
+    Default: capacityOptimized
+    Type: String
+    AllowedValues: [ capacityOptimized, lowestPrice ]
 
   VPC:
     Description: Choose existing VPC
@@ -228,32 +233,32 @@ Resources:
       SpotFleetRequestConfigData:
         IamFleetRole: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-ec2-spot-fleet-tagging-role
         SpotPrice: 0.1
-        TargetCapacity: 1
-        AllocationStrategy: capacityOptimized
+        TargetCapacity: 2
+        AllocationStrategy: !Ref AllocationStrategy
         LaunchTemplateConfigs:
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: r5a.large
+              - InstanceType: t3a.small
                 SubnetId: !Select [ 0, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: r5.large
+              - InstanceType: t3.small
                 SubnetId: !Select [ 0, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: t3a.large
+              - InstanceType: t3a.medium
                 SubnetId: !Select [ 0, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: t3.large
+              - InstanceType: t3.medium
                 SubnetId: !Select [ 0, !Ref PrivateSubnets ]
 
   SpotFleetB:
@@ -263,32 +268,32 @@ Resources:
       SpotFleetRequestConfigData:
         IamFleetRole: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-ec2-spot-fleet-tagging-role
         SpotPrice: 0.1
-        TargetCapacity: 1
-        AllocationStrategy: capacityOptimized
+        TargetCapacity: 2
+        AllocationStrategy: !Ref AllocationStrategy
         LaunchTemplateConfigs:
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: r5a.large
+              - InstanceType: t3a.small
                 SubnetId: !Select [ 1, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: r5.large
+              - InstanceType: t3.small
                 SubnetId: !Select [ 1, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: t3a.large
+              - InstanceType: t3a.medium
                 SubnetId: !Select [ 1, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: t3.large
+              - InstanceType: t3.medium
                 SubnetId: !Select [ 1, !Ref PrivateSubnets ]
 
   SpotFleetC:
@@ -298,32 +303,32 @@ Resources:
       SpotFleetRequestConfigData:
         IamFleetRole: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-ec2-spot-fleet-tagging-role
         SpotPrice: 0.1
-        TargetCapacity: 1
-        AllocationStrategy: capacityOptimized
+        TargetCapacity: 2
+        AllocationStrategy: !Ref AllocationStrategy
         LaunchTemplateConfigs:
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: r5a.large
+              - InstanceType: t3a.small
                 SubnetId: !Select [ 2, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: r5.large
+              - InstanceType: t3.small
                 SubnetId: !Select [ 2, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: t3a.large
+              - InstanceType: t3a.medium
                 SubnetId: !Select [ 2, !Ref PrivateSubnets ]
           - LaunchTemplateSpecification:
               LaunchTemplateId: !Ref LaunchTemplate
               Version: !GetAtt LaunchTemplate.LatestVersionNumber
             Overrides:
-              - InstanceType: t3.large
+              - InstanceType: t3.medium
                 SubnetId: !Select [ 2, !Ref PrivateSubnets ]
 
   WaitUserData:
