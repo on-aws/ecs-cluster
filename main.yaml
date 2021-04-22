@@ -24,6 +24,11 @@ Parameters:
     Type: Number
     AllowedValues: [ 1, 2, 3 ]
 
+  TasksPerAvailabilityZone:
+    Description: Number of ECS tasks per availability zone.
+    Default: 1
+    Type: Number
+
   AllocationStrategy:
     Default: capacityOptimized
     Type: String
@@ -54,6 +59,13 @@ Conditions:
   AssignOwner:
     Fn::Not:
       - Fn::Equals: [ !Ref Owner, "" ]
+
+Mappings:
+  Configuration:
+    FleetTargetCapacity:
+      "1": 1
+      "2": 1
+      "3": 2
 
 Resources:
   ECSCluster:
@@ -233,7 +245,7 @@ Resources:
       SpotFleetRequestConfigData:
         IamFleetRole: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-ec2-spot-fleet-tagging-role
         SpotPrice: 0.1
-        TargetCapacity: 2
+        TargetCapacity: !FindInMap [Configuration, FleetTargetCapacity, !Ref TasksPerAvailabilityZone]
         AllocationStrategy: !Ref AllocationStrategy
         LaunchTemplateConfigs:
           - LaunchTemplateSpecification:
@@ -268,7 +280,7 @@ Resources:
       SpotFleetRequestConfigData:
         IamFleetRole: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-ec2-spot-fleet-tagging-role
         SpotPrice: 0.1
-        TargetCapacity: 2
+        TargetCapacity: !FindInMap [Configuration, FleetTargetCapacity, !Ref TasksPerAvailabilityZone]
         AllocationStrategy: !Ref AllocationStrategy
         LaunchTemplateConfigs:
           - LaunchTemplateSpecification:
@@ -303,7 +315,7 @@ Resources:
       SpotFleetRequestConfigData:
         IamFleetRole: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-ec2-spot-fleet-tagging-role
         SpotPrice: 0.1
-        TargetCapacity: 2
+        TargetCapacity: !FindInMap [Configuration, FleetTargetCapacity, !Ref TasksPerAvailabilityZone]
         AllocationStrategy: !Ref AllocationStrategy
         LaunchTemplateConfigs:
           - LaunchTemplateSpecification:
